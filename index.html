@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A4A Proposal DApp</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .no-focus:focus{
+            box-shadow:none !important;
+            outline:none !important;
+        }
+        
+        a:link, a:visited {
+  background-color: #0dba6d;
+  color: white;
+  padding: 15px 25px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  display: inline-block;
+}     
+
+      #topBanner {
+        background: #f32123;
+        color: white;
+        font-size:1.0rem;
+        padding: 10px;
+        text-align: center;
+        top: 20;
+        width: 100%;
+        z-index: 2;
+      }
+
+      #topBanner .btn-close {
+        position: absolute;
+        right: 0;
+      }
+
+body {background-color: #FFFFFF;}      
+      
+    </style>
+</head>
+<body>
+    <div id="loading" class="text-center py-5">
+        <span class="spinner-border text-warning" role="status"></span>
+    </div>
+    <div id="mainArea" class="d-none">
+        <div class="shadow-sm py-3 text-center">
+            <img src="logo.jpg" height="40px;">
+            <h4 class="d-inline" style="vertical-align:middle;">A4A Proposal DApp Statistics</h4>
+        </div>
+
+   <div id="topBanner">
+      <b >
+        DAPP to allow users to create and vote on the A4ADAO Proposals.
+        Click here to Submit Your Vote
+      </b>
+      <a class="frpbutton" href="https://polarity.exchange/dapps?dapp=3N6oWLyQY2gM7QUkUvBme1REnA6d1V7y3AT">Proposal Dapp</a>
+      <button class="btn btn-close btn-close-white pe-"
+          onclick="closeTopBanner()">
+      </button>
+    </div>             
+                    
+        <div class="container-fluid mx-auto py-5 px-lg-5">
+            <div class="row">
+                <div class="col">
+                    <div class="card py-3" style="background: #000080;">
+                        <div class="card-body text-center h4 text-white" id="panel0"></div>
+                    </div>
+                </div>               
+            </div>
+        </div>
+
+        
+        <div class="container-fluid mx-auto py-5 px-lg-5">
+            <div class="row">
+                <div class="col-md-9 pb-3">
+                    <div class="form-group rounded position-relative border p-1">
+                        <label class="small ml-3 mt-n3 px-2 position-absolute bg-white">Enter Proposal ID</label>
+                        <input type="text" class="form-control border-0 px-4 no-focus" oninput="search(this.value);">
+                    </div>
+                </div>
+                <div class="col-md-3 pb-3">
+                    <div class="form-group rounded position-relative border p-1">
+                        <label class="small ml-3 mt-n3 px-2 position-absolute bg-white">Sort By</label>
+                        <select class="custom-select no-focus border-0 pl-3" onchange="sortData(this.value);">
+                            <option value="0" selected>Total Votes (Hight to Low)</option>
+                            <option value="1">Total Votes (Low to Hight)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="resultArea"></div>
+        </div>
+    </div>
+    <script>
+        const APIURL = "https://testnode2.wavesnodes.com/addresses/data/3N6oWLyQY2gM7QUkUvBme1REnA6d1V7y3AT";
+
+        var loanData = '';
+        var loading = document.getElementById("loading");
+        var mainArea = document.getElementById("mainArea");
+        var resultArea = document.getElementById("resultArea");
+        var address = '';
+        var sortRule = 0;
+        var blockHeight;
+        
+        
+        window.onload = async function(){
+            var responseObject = await fetch(APIURL);
+            loanData = await responseObject.json();
+         
+
+            var panel0ResponseObject = await fetch("https://testnode2.wavesnodes.com/addresses/data/3N6oWLyQY2gM7QUkUvBme1REnA6d1V7y3AT/Total_Proposals");
+            panel1Data = await panel0ResponseObject.json();
+            document.getElementById("panel0").innerHTML = 'Total Proposal Posted<br>'+panel1Data.value;
+                                                                      
+            
+            loading.remove();
+            mainArea.classList.remove('d-none');
+            showData(loanData, sortRule);
+        }
+
+        window.setTimeout(function () {
+  window.location.reload();
+}, 300000);
+        
+        
+        function search(value){
+            address = value.trim();
+            showData(loanData, sortRule);
+        }
+
+        function sortData(value){
+            sortRule = value;
+            showData(loanData, sortData);
+        }
+
+        function showData(loanData, sort){
+            var data = loanData;
+            var output = '';
+            var allIndex = [];
+            var searchResult = [];
+            data.forEach(function(item, index){
+                if(item.key.includes(address)){
+                    thisKey = item.key.substring(item.key.lastIndexOf("_")+1);
+                    thisValue = item.value;
+                    if(allIndex.indexOf(thisKey) < 0){
+                        allIndex.push(thisKey);
+                        searchResult.push({Address:thisKey});
+                    }
+                                        
+                    var thisIndex = allIndex.indexOf(thisKey);
+                    if(item.key.includes('Proposal_Text_')){
+                        searchResult[thisIndex].Title = item.value;
+                    }                                                            
+                    if(item.key.includes('Proposer_')){
+                        searchResult[thisIndex].Proposar = item.value;
+                    }                                        
+                    if(item.key.includes('Total_Votes_')){
+                        searchResult[thisIndex].Total_Votes = item.value;
+                    }
+                    if(item.key.includes('Total_Yes_')){
+                        searchResult[thisIndex].Total_Yes = item.value;
+                    }
+                    if(item.key.includes('Total_No_')){
+                        searchResult[thisIndex].Total_No = item.value;
+                    }
+                    if(item.key.includes('Voting_End_TimeStamp_')){
+                        searchResult[thisIndex].Voting_End_Timestamp = item.value;
+                    }                    
+                }
+            });
+
+            if(searchResult.length > 0){
+                searchResult.forEach(function(item, index){
+                    if(searchResult[index].Total_Votes === undefined){
+                        delete searchResult[index];
+                    }
+                });
+
+                if(sortRule == 0){
+                    searchResult.sort(function (a, b) {
+                        return parseFloat(a.Total_Votes) - parseFloat(b.Total_Votes);
+                    });
+                    searchResult =  searchResult.reverse();
+                }else if(sortRule == 1){
+                    searchResult.sort(function (a, b) {
+                        return parseFloat(a.Total_Votes) - parseFloat(b.Total_Votes);
+                    });
+                }
+
+                output += '<div class="table-responsive">'
+                output += '<table class="table border table-borderless table-striped table-light" id="table">'
+                output += '<thead class="text-white" style="background-color: #4100ff">';
+                output += '<tr>';
+                output += '<th># ID</th>';
+                output += '<th># Title</th>';                
+                output += '<th># PROPOSAR ADDRESS</th>';                
+                output += '<th>TOTAL VOTES</th>';
+                output += '<th>"YES" Vote Amount</th>';
+                output += '<th>"NO" Vote Amount</th>';
+                output += '<th>Voting End Period</th>';
+                output += '<th>Proposal Status</th>';
+                output += '</tr>';
+                output += '</thead>';
+                output += '<tbody>';
+                searchResult.forEach(function(item, index){
+                    output += '<tr style="cursor:pointer;">';
+                    output += '<td>'+searchResult[index].Address+'</td>';
+                    if(searchResult[index].Title === undefined || String(searchResult[index].Title).length < 1){
+                        output += '<td>N&#47;A</td>';
+                    }else{
+                        output += '<td style="word-break:break-all;">'+searchResult[index].Title+'</td>';
+                    }
+                    if(searchResult[index].Proposar === undefined || String(searchResult[index].Proposar).length < 1){
+                        output += '<td>N&#47;A</td>';
+                    }else{
+                        output += '<td>'+searchResult[index].Proposar+'</td>';
+                    }
+                    if(searchResult[index].Total_Votes === undefined || String(searchResult[index].Total_Votes).length < 1){
+                        output += '<td>N&#47;A</td>';
+                    }else{
+                        output += '<td>'+(searchResult[index].Total_Votes/100000000).toFixed(8)+' A4A</td>';
+                    }
+
+                    if(searchResult[index].Total_Yes === undefined || String(searchResult[index].Total_Yes).length < 1){
+                        output += '<td>N&#47;A</td>';
+                    }else{
+                        output += '<td>'+(searchResult[index].Total_Yes/100000000).toFixed(8)+' A4A</td>';
+                    }
+                    if(searchResult[index].Total_No === undefined || String(searchResult[index].Total_No).length < 1){
+                        output += '<td>N&#47;A</td>';
+                    }else{
+                        output += '<td>'+(searchResult[index].Total_No/100000000).toFixed(8)+' A4A</td>';
+                    }
+                    if(searchResult[index].Voting_End_Timestamp === undefined || String(searchResult[index].Voting_End_Timestamp).length < 1){
+                        output += '<td>N&#47;A</td>';
+                    }else{
+                        output += '<td>'+ new Date(searchResult[index].Voting_End_Timestamp).toLocaleString("en-US")+'</td>';
+                    }                    
+                    var Indicator = parseInt(searchResult[index].Total_Yes - searchResult[index].Total_No);
+                    output += '<td>';
+                        if(Indicator > 0){
+                            output += '<span class="bg-success px-2 py-1 w-100 small rounded text-white">Passed</span>';
+                        }else{
+                            output += '<span class="bg-danger px-2 py-1 w-100 small rounded text-white">Rejected</span>';
+                        }
+                    output += '</td>';
+                    output += '</tr>';
+                });
+                output += '</tbody>';
+                output += '</table>';
+                output += '</div>';
+
+                output += '<div class="text-center pt-3"><button class="btn btn-success px-5 py-3" onclick="exportTableToCSV(\'download.csv\');">Download As Excel</button></div>';                
+            }else{
+                output = '<h4 class="text-center mt-4">Opps!! No Result was found.</h4>';
+            }
+            resultArea.innerHTML = output;
+        }
+        
+		function exportTableToCSV(filename) {
+			var csv = [];
+			var rows = document.querySelectorAll("table tr");
+			for (var i = 0; i < rows.length; i++) {
+				var row = [], cols = rows[i].querySelectorAll("td, th");
+				for (var j = 0; j < cols.length; j++) 
+					row.push(cols[j].innerText);   
+				csv.push(row.join(","));        
+			}
+			downloadCSV(csv.join("\n"), filename);
+		}
+        
+		function downloadCSV(csv, filename) {
+			var csvFile;
+			var downloadLink;
+			csvFile = new Blob([csv], {type: "text/csv"});
+			downloadLink = document.createElement("a");
+			downloadLink.download = filename;
+			downloadLink.href = window.URL.createObjectURL(csvFile);
+			downloadLink.style.display = "none";
+			document.body.appendChild(downloadLink);
+			downloadLink.click();
+		}
+        
+
+        
+        
+
+    </script>
+</body>
+</html>
